@@ -7,62 +7,69 @@ const questions = [
 ]
 
 
-const form = document.getElementById('feedback-form');
-const toastContainer = document.getElementById('toast');
+let currentQuestionIndex = 0;
+let score = 0;
 
-form.addEventListener('submit', (a) => {
-    a.preventDefault();
+const questionEl = document.getElementById("question");
+const nextButton = document.getElementById("next-question");
+const submitButton = document.getElementById("submit-quiz");
+const resultMessageEl = document.getElementById("resultMessage");
 
-    const name = document.getElementById('name').value;
-    const email = document.getElementById('email').value;
-    const subject = document.getElementById('subject').value;
-    const message = document.getElementById('message').value;
+function loadQuestion() {
+  const currentQuestion = quizData[currentQuestionIndex];
+  questionEl.innerHTML = `
+    <h5>${currentQuestion.question}</h5>
+    <ul class="list-group">
+      ${currentQuestion.options
+        .map(
+          (option, index) => `
+        <li class="list-group-item">
+          <input type="radio" name="option" id="option${index}" value="${index}" />
+          <label for="option${index}">${option}</label>
+        </li>
+      `
+        )
+        .join("")}
+    </ul>
+  `;
+}
 
-    if (!validateForm(name, email, subject, message)) {
-        return;
-    }
+nextButton.addEventListener("click", () => {
+  const selectedOption = document.querySelector('input[name="option"]:checked');
+  if (!selectedOption) {
+    alert("Please select an answer!");
+    return;
+  }
 
+  const answer = parseInt(selectedOption.value);
+  if (answer === quizData[currentQuestionIndex].correct) {
+    score++;
+  }
 
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.role = 'alert';
-    toast.ariaLive = 'assertive';
-    toast.ariaAtomic = 'true';
-    toast.innerHTML = `
-        <div class="toast-header">
-            <strong class="mr-auto">Feedback submitted!</strong>
-            <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-        <div class="toast-body">
-            Thank you for your feedback!
-        </div>
-    `;
-    toastContainer.appendChild(toast);
-
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
+  currentQuestionIndex++;
+  if (currentQuestionIndex < quizData.length - 1) {
+    loadQuestion();
+  } else {
+    nextButton.classList.add("d-none");
+    submitButton.classList.remove("d-none");
+  }
 });
 
-function validateForm(name, email, subject, message) {
-    if (!name ||!email ||!subject ||!message) {
-        alert('All fields are required!');
-        return false;
-    }
+submitButton.addEventListener("click", () => {
+  const selectedOption = document.querySelector('input[name="option"]:checked');
+  if (!selectedOption) {
+    alert("Please select an answer!");
+    return;
+  }
 
-    if (!validateEmail(email)) {
-        alert('Invalid email address!');
-        return false;
-    }
+  const answer = parseInt(selectedOption.value);
+  if (answer === quizData[currentQuestionIndex].correct) {
+    score++;
+  }
 
-    return true;
-}
+  const resultMessage = `You scored ${score} out of ${quizData.length}`;
+  resultMessageEl.textContent = resultMessage;
+  $("#resultModal").modal("show");
+});
 
-function validateEmail(email) {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return emailRegex.test(email);
-}
-
-
+loadQuestion();
